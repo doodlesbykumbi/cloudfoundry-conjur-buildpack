@@ -18,7 +18,6 @@ echo "[cyberark-conjur-buildpack]: supplying"
 
 
 echo "[cyberark-conjur-buildpack]: looking for secrets.yml"
-
 if [ -f $BUILD_DIR/secrets.yml ]; then
   echo " - secrets.yml file found in $BUILD_DIR"
 elif  [ -f $BUILD_DIR/BOOT-INF/classes/secrets.yml ]; then
@@ -51,7 +50,7 @@ pushd  ${DEPS_DIR}/${INDEX_DIR}
   GOOS=linux \
   GOARCH=amd64 \
   CGO_ENABLED=0 \
-  $GoInstallDir/go/bin/go build -v -o ./conjur-env -a -ldflags '-extldflags "-static"' .
+  $GoInstallDir/go/bin/go build -o ./conjur-env -a -ldflags '-extldflags "-static"' .
   file ${BUILDPACK_DIR}/conjur-env/conjur-env
 
   echo "[cyberark-conjur-buildpack]: copy the conjur-env binary to the correct directory"
@@ -97,11 +96,12 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
 
   # CONCERN: this following code, may only need to be executed *IF* the final build pack is java*
   # This will need to be heavily tested with multiple final buildpacks. 
+  # or if the conjur-env runs twice is that a big deal? It will just 
+  # set the env twice.  not good, but not terrible.
 
   mkdir -p $BUILD_DIR/.profile.d/
   cp ./profile.d/0001_retrieve-secrets.sh $BUILD_DIR/.profile.d/
-  ls -l $BUILD_DIR/.profile.d/
-
+  file $BUILD_DIR/.profile.d/0001_retrieve-secrets.sh
 
   # conjur-env reads a secrets.yml file and uses it to retrieve secrets from
   # Conjur. We copy it to the dependency directory to make it accessible to the
