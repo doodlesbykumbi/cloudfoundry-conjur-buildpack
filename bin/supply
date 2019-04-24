@@ -58,7 +58,9 @@ pushd  ${DEPS_DIR}/${INDEX_DIR}
   echo "[cyberark-conjur-buildpack]:  - FROM: ${BUILDPACK_DIR}/conjur-env/conjur-env"
   echo "[cyberark-conjur-buildpack]:  - TO: ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env"
   mkdir -p ${DEPS_DIR}/${INDEX_DIR}/vendor/
+  file ${DEPS_DIR}/${INDEX_DIR}/vendor/
   cp ${BUILDPACK_DIR}/conjur-env/conjur-env ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
+  ls -l ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
 
 popd
 
