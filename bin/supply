@@ -70,9 +70,13 @@ echo "[cyberark-conjur-buildpack]: setup the profile.d script so the conjur app 
 pushd ${DEPS_DIR}/${INDEX_DIR}
   # We add the lib/0001_retrieve-secrets.sh script to profile.d so that it will
   # be run automatically to retrieve secrets when the app starts.
+  pwd
   mkdir -p ./profile.d
   cp ${BUILDPACK_DIR}/lib/0001_retrieve-secrets.sh ./profile.d/0001_retrieve-secrets.sh
   sed "s/__BUILDPACK_INDEX__/$INDEX_DIR/g" ./profile.d/0001_retrieve-secrets.sh -i
+
+  ls -l ./profile.d/0001_retrieve-secrets.sh
+  cat ./profile.d/0001_retrieve-secrets.sh
 
   # conjur-env reads a secrets.yml file and uses it to retrieve secrets from
   # Conjur. We copy it to the dependency directory to make it accessible to the
