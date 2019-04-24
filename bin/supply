@@ -22,7 +22,7 @@ echo "[cyberark-conjur-buildpack]: looking for secrets.yml"
 if [ -f $BUILD_DIR/secrets.yml ]; then
   echo " - secrets.yml file found in $BUILD_DIR"
 elif  [ -f $BUILD_DIR/BOOT-INF/classes/secrets.yml ]; then
-  echo " - secrets.yml file found in $BUILD_DIR/BOOT-INF/classes/secrets.yml copy to $BUILD_DIR"
+  echo " - secrets.yml file found in $BUILD_DIR/BOOT-INF/classes/secrets.yml copy to $BUILD_DIR/secrets.yml"
   cp $BUILD_DIR/BOOT-INF/classes/secrets.yml $BUILD_DIR/secrets.yml
 else
   echo " - Unable to find a secrets.yml... exit"
@@ -44,14 +44,16 @@ source "$BUILDPACK_DIR/lib/install_go.sh"
 pushd  ${DEPS_DIR}/${INDEX_DIR}
   cd ${BUILDPACK_DIR}/conjur-env
 
-  echo "[cyberark-conjur-buildpack]: building the conjur-env binary.. download the dependencies"
+  echo "[cyberark-conjur-buildpack]: building the conjur-env binary. download the dependencies"
   $GoInstallDir/go/bin/go mod download
 
-  echo "[cyberark-conjur-buildpack]: building the conjur-env binary.. building the binary"
+  echo "[cyberark-conjur-buildpack]: building the conjur-env binary."
   GOOS=linux \
   GOARCH=amd64 \
   CGO_ENABLED=0 \
-  $GoInstallDir/go/bin/go build -o ${BUILDPACK_DIR}/vendor/conjur-env -a -ldflags '-extldflags "-static"' .
+  $GoInstallDir/go/bin/go build -v -o ${BUILDPACK_DIR}/vendor/conjur-env -a -ldflags '-extldflags "-static"' .
+  ls -l 
+  ls -l ${BUILDPACK_DIR}/vendor/conjur-env
 
 popd
 
