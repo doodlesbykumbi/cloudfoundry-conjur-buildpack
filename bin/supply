@@ -38,7 +38,7 @@ else
 fi
 
 echo "[cyberark-conjur-buildpack]: download go"
-source "$BUILDPACK_DIR/scripts/install_go.sh"
+source "$BUILDPACK_DIR/lib/install_go.sh"
 
 
 pushd  ${DEPS_DIR}/${INDEX_DIR}
