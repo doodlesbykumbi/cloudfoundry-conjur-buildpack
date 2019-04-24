@@ -76,10 +76,11 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
   # that are more focused on individual problems. 
 
   # why does this matter? Because it is the final buildpacks whose job is to 
-  # look through all the ./profile.d/ directories of all the dependencies. 
-  # and the Java Buildpack never implemented this functionality, and the V2 version
-  # has no plans to. 
-  
+  # look through all the ./profile.d/ directories of all the dependencies and execute scripts. 
+  # and the Java Buildpack v2 has not plans to implement this functionality.
+
+  # https://github.com/cloudfoundry/java-buildpack/issues/563#issuecomment-452437417
+
   # :(
 
   # so V2 supply buildpacks must *push* their scripts over into the /home/vcap/app/profile.d/ 
@@ -93,7 +94,7 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
   # or if the conjur-env runs twice is that a big deal? It will just 
   # set the env twice.  not good, but not terrible.
 
-  echo "[cyberark-conjur-buildpack]:  - because of missing feature in Java Buildpack, also copy /home/vcap/app/.profile.d/"
+  echo "[cyberark-conjur-buildpack]:  - because of missing feature in Java Buildpack, also copy to /home/vcap/app/.profile.d/"
   mkdir -p $BUILD_DIR/.profile.d/
   cp -v ./profile.d/0001_retrieve-secrets.sh $BUILD_DIR/.profile.d/
 
