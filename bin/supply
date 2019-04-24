@@ -83,7 +83,7 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
 
   # :(
 
-  # so V2 supply buildpacks must *push* their scripts over into the /home/vcap/app/profile.d/ 
+  # so V2 supply buildpacks must *push* their scripts over into the /home/vcap/app/.profile.d/ 
   # directory. This is breaking of the build pack contract to manipulate anything inside /home/vcap/app
   # but at this point, you don't have much of a choice, all all this gets fixed in the V3 versions. 
 
