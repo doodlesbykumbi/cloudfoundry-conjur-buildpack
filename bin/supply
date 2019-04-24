@@ -52,8 +52,7 @@ pushd  ${DEPS_DIR}/${INDEX_DIR}
   GOARCH=amd64 \
   CGO_ENABLED=0 \
   $GoInstallDir/go/bin/go build -v -o ${BUILDPACK_DIR}/vendor/conjur-env -a -ldflags '-extldflags "-static"' .
-  ls -l 
-  ls -l ${BUILDPACK_DIR}/vendor/conjur-env
+  file ${BUILDPACK_DIR}/vendor/conjur-env
 
 popd
 
@@ -70,7 +69,7 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
   # conjur-env reads a secrets.yml file and uses it to retrieve secrets from
   # Conjur. We copy it to the dependency directory to make it accessible to the
   # /profile.d script. The /vendor subdirectory is just for convenience.
-  mkdir -p vendor
+  mkdir -p $BUILD_DIR/vendor
   cp ${BUILDPACK_DIR}/vendor/conjur-env $BUILD_DIR/vendor/conjur-env
 popd
 
