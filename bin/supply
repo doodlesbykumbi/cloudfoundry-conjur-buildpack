@@ -95,6 +95,9 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
 
   # /shrug.  
 
+  # CONCERN: this following code, may only need to be executed *IF* the final build pack is java*
+  # This will need to be heavily tested with multiple final buildpacks. 
+
   mkdir -p $BUILD_DIR/profile.d/
   cp ./profile.d/0001_retrieve-secrets.sh $BUILD_DIR/profile.d/
   ls -l $BUILD_DIR/profile.d/
