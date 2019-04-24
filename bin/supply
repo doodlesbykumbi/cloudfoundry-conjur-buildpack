@@ -53,13 +53,11 @@ pushd  ${DEPS_DIR}/${INDEX_DIR}
   $GoInstallDir/go/bin/go build -o ./conjur-env -a -ldflags '-extldflags "-static"' .
   file ${BUILDPACK_DIR}/conjur-env/conjur-env
 
-  echo "[cyberark-conjur-buildpack]: copy the conjur-env binary to the correct directory"
+  echo "[cyberark-conjur-buildpack]: copy the conjur-env binary from the buildpack dir to the dependencies/index directory"
   echo "[cyberark-conjur-buildpack]:  - FROM: ${BUILDPACK_DIR}/conjur-env/conjur-env"
   echo "[cyberark-conjur-buildpack]:  - TO: ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env"
   mkdir -p ${DEPS_DIR}/${INDEX_DIR}/vendor/
-  file ${DEPS_DIR}/${INDEX_DIR}/vendor/
-  cp ${BUILDPACK_DIR}/conjur-env/conjur-env ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
-  ls -l ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
+  cp -v ${BUILDPACK_DIR}/conjur-env/conjur-env ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
 
 popd
 
@@ -69,7 +67,8 @@ echo "[cyberark-conjur-buildpack]: setup the profile.d script so the conjur app 
 pushd ${DEPS_DIR}/${INDEX_DIR}
   # We add the lib/0001_retrieve-secrets.sh script to profile.d so that it will
   # be run automatically to retrieve secrets when the app starts.
-  pwd
+
+echo "[cyberark-conjur-buildpack]: setup the dependencies/index/profile.d script so the conjur app starts automatically"
   mkdir -p ./profile.d
   cp ${BUILDPACK_DIR}/lib/0001_retrieve-secrets.sh ./profile.d/0001_retrieve-secrets.sh
   sed "s/__BUILDPACK_INDEX__/$INDEX_DIR/g" ./profile.d/0001_retrieve-secrets.sh -i
@@ -99,6 +98,7 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
   # or if the conjur-env runs twice is that a big deal? It will just 
   # set the env twice.  not good, but not terrible.
 
+  echo "[cyberark-conjur-buildpack]:  - because of missing feature in Java Buildpack, also copy /home/vcap/app/.profile.d/"
   mkdir -p $BUILD_DIR/.profile.d/
   cp ./profile.d/0001_retrieve-secrets.sh $BUILD_DIR/.profile.d/
   file $BUILD_DIR/.profile.d/0001_retrieve-secrets.sh
