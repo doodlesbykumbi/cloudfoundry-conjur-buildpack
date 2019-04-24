@@ -44,15 +44,21 @@ source "$BUILDPACK_DIR/lib/install_go.sh"
 pushd  ${DEPS_DIR}/${INDEX_DIR}
   cd ${BUILDPACK_DIR}/conjur-env
 
-  echo "[cyberark-conjur-buildpack]: building the conjur-env binary. download the dependencies"
+  echo "[cyberark-conjur-buildpack]: download the conjur-env binary dependencies"
   $GoInstallDir/go/bin/go mod download
 
   echo "[cyberark-conjur-buildpack]: building the conjur-env binary."
   GOOS=linux \
   GOARCH=amd64 \
   CGO_ENABLED=0 \
-  $GoInstallDir/go/bin/go build -v -o ${BUILDPACK_DIR}/conjur-env/conjur-env -a -ldflags '-extldflags "-static"' .
+  $GoInstallDir/go/bin/go build -v -o ./conjur-env -a -ldflags '-extldflags "-static"' .
   file ${BUILDPACK_DIR}/conjur-env/conjur-env
+
+  echo "[cyberark-conjur-buildpack]: copy the conjur-env binary to the correct directory"
+  echo "[cyberark-conjur-buildpack]:  - FROM: ${BUILDPACK_DIR}/conjur-env/conjur-env"
+  echo "[cyberark-conjur-buildpack]:  - TO: ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env"
+  mkdir -p ${DEPS_DIR}/${INDEX_DIR}/vendor/
+  cp ${BUILDPACK_DIR}/conjur-env/conjur-env ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
 
 popd
 
