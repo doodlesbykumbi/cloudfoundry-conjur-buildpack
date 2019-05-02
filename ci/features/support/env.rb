@@ -19,6 +19,8 @@ Before('@BUILD_DIR') do
 
   Dir.mkdir(File.join(@DEPS_DIR, @INDEX_DIR), 0700)
   @VENDOR_DIR = "#{@DEPS_DIR}/#{@INDEX_DIR}/vendor"
+
+  FileUtils.copy_entry ENV['BUILDPACK_BUILD_DIR'], File.join(@DEPS_DIR, @INDEX_DIR)
 end
 
 After('@BUILD_DIR') do

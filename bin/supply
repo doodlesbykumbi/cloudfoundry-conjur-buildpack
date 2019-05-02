@@ -49,27 +49,35 @@ else
   echo " - found it"
 fi
 
-echo "[cyberark-conjur-buildpack]: install go to build conjur-env binary"
-source "$BUILDPACK_DIR/lib/install_go.sh"
+# Build the conjur-env binary if it's not in the buildpack package
+CONJUR_ENV_PATH=${BUILDPACK_DIR}/vendor/conjur-env
+echo "[cyberark-conjur-buildpack]: looking for conjur-env binary at ${CONJUR_ENV_PATH}"
+if [ -f ${CONJUR_ENV_PATH} ]; then
+  echo " - found it"
+else
+  echo " - need to compile conjur-env"
+  echo "[cyberark-conjur-buildpack]: install go to build conjur-env binary"
+  source "$BUILDPACK_DIR/lib/install_go.sh"
 
+  pushd  ${DEPS_DIR}/${INDEX_DIR}
+    cd ${BUILDPACK_DIR}/conjur-env
 
-pushd  ${DEPS_DIR}/${INDEX_DIR}
-  cd ${BUILDPACK_DIR}/conjur-env
+    echo "[cyberark-conjur-buildpack]: download the conjur-env binary dependencies"
+    $GoInstallDir/go/bin/go mod download
 
-  echo "[cyberark-conjur-buildpack]: download the conjur-env binary dependencies"
-  $GoInstallDir/go/bin/go mod download
+    echo "[cyberark-conjur-buildpack]: building the conjur-env binary."
+    GOOS=linux \
+    GOARCH=amd64 \
+    CGO_ENABLED=0 \
+    $GoInstallDir/go/bin/go build -o ${CONJUR_ENV_PATH} -a -ldflags '-extldflags "-static"' .
+    file ${CONJUR_ENV_PATH}
+  popd
+fi
 
-  echo "[cyberark-conjur-buildpack]: building the conjur-env binary."
-  GOOS=linux \
-  GOARCH=amd64 \
-  CGO_ENABLED=0 \
-  $GoInstallDir/go/bin/go build -o ./conjur-env -a -ldflags '-extldflags "-static"' .
-  file ${BUILDPACK_DIR}/conjur-env/conjur-env
-
-  echo "[cyberark-conjur-buildpack]: copy the conjur-env binary from the buildpack dir to the dependencies/index directory"
-  mkdir -p ${DEPS_DIR}/${INDEX_DIR}/vendor/
-  cp -v ${BUILDPACK_DIR}/conjur-env/conjur-env ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
-popd
+# Copy conjur-env into application dependencies
+echo "[cyberark-conjur-buildpack]: copy the conjur-env binary from the buildpack dir to the dependencies/index directory"
+mkdir -p ${DEPS_DIR}/${INDEX_DIR}/vendor/
+cp -v ${CONJUR_ENV_PATH} ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
 
 
 pushd ${DEPS_DIR}/${INDEX_DIR}

@@ -1,6 +1,5 @@
 Then(/^conjur-env is installed$/) do
-  `ls #{@VENDOR_DIR}/conjur-env`
-  expect($?.exitstatus).to eq (0)
+  expect(File.exist?("#{@DEPS_DIR}/#{@INDEX_DIR}/vendor/conjur-env")).to be_truthy
 end
 
 Then(/^the retrieve secrets profile\.d script is installed$/) do
