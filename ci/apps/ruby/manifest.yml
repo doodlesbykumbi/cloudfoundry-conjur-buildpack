@@ -1,0 +1,8 @@
+---
+applications:
+- name: ruby-app
+  services:
+  - conjur
+  buildpacks:
+  - https://github.com/cyberark/cloudfoundry-conjur-buildpack#pr/29
+  - ruby_buildpack

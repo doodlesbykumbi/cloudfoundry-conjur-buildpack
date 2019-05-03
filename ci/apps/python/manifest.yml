@@ -1,0 +1,8 @@
+---
+applications:
+- name: python-app
+  services:
+  - conjur
+  buildpacks:
+  - https://github.com/cyberark/cloudfoundry-conjur-buildpack#pr/29
+  - python_buildpack
