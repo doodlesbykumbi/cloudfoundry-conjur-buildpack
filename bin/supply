@@ -30,7 +30,7 @@ fi
 
 echo "[cyberark-conjur-buildpack]: looking for cyberark-conjur in VCAP_SERVICES"
 if [[ false = $(echo $VCAP_SERVICES | jq 'has("cyberark-conjur")') ]]; then
-  echo "No credentials for cyberark-conjur service found in VCAP_SERVICES."
+  echo " - No credentials for cyberark-conjur service found in VCAP_SERVICES... exit"
   exit 1
 else
   echo " - found it"
