@@ -21,6 +21,19 @@ echo "[cyberark-conjur-buildpack]: looking for secrets.yml"
 if [ -f $BUILD_DIR/secrets.yml ]; then
   echo " - secrets.yml file found in $BUILD_DIR"
 elif  [ -f $BUILD_DIR/BOOT-INF/classes/secrets.yml ]; then
+
+  # Spring Boot 1.4 seemed to have changed where files get placed into the Executable Jar:
+  # https://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html
+  
+  # Here is a long disussion about that change. The thread jumps into impact to CloudFoundry halfway down. 
+  # https://github.com/spring-projects/spring-boot/issues/6626
+  # The owner of the Java Buildpack is Ben Hale, and he weighs in about half way down. 
+  # Simple answer is that you can't get files into the root of the jar without manipulating the jar
+  # using maven or gradle after it is created.
+
+  # Future possible option rather than manipulate the files, is to locate the secrets.yml and then pass
+  # the path to the conjur-env process (or even have the conjur-evn find it directly) 
+
   echo " - secrets.yml file found in $BUILD_DIR/BOOT-INF/classes/secrets.yml copy to $BUILD_DIR/secrets.yml"
   cp $BUILD_DIR/BOOT-INF/classes/secrets.yml $BUILD_DIR/secrets.yml
 else
@@ -98,17 +111,6 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
   mkdir -p $BUILD_DIR/.profile.d/
   cp -v ./profile.d/0001_retrieve-secrets.sh $BUILD_DIR/.profile.d/
 
-  # conjur-env reads a secrets.yml file and uses it to retrieve secrets from
-  # Conjur. We copy it to the dependency directory to make it accessible to the
-  # /profile.d script. The /vendor subdirectory is just for convenience.
-  
-  # note, the 0001_retrieve-secrets.sh script referenced:
-  #   $DEPS_DIR/__BUILDPACK_INDEX__/vendor/conjur-env
-  # so why are we copying it to a different directory below? 
-  # commenting out to see if it breaks anything /shrug
-  
-  #mkdir -p $BUILD_DIR/vendor
-  #cp ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env $BUILD_DIR/vendor/conjur-env
 popd
 
 

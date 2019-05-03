@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Borrowing this script from the Ruby Buildpack.  
+# Borrowing this script from the Node.js Buildpack.  
 # https://raw.githubusercontent.com/cloudfoundry/nodejs-buildpack/master/scripts/install_go.sh
 
 set -euo pipefail
