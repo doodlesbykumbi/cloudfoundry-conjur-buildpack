@@ -30,6 +30,11 @@ The buildpack has a cucumber test suite. This validates the functionality and al
 
 ## Getting Started
 
+The Conjur Buildpack can be included in a CloudFoundry application as an online buildpack, using the
+GitHub repository address, or installed into a CloudFoundry foundation.
+
+For documentation on how to use the online buildpack, see [using](#online) below for details.
+
 ### Installing the Conjur Buildpack
 
 **Before you begin, ensure you are logged into your CF deployment via the CF CLI.**
@@ -73,7 +78,7 @@ AWS_REGION: us-east-1
 SSL_CERT: /tmp/ssl-cert.pem
 ```
 
-#### Invoke the Buildpack at Deploy Time
+#### Invoke the Installed Buildpack at Deploy Time
 
 When you deploy your application, ensure it is bound to a Conjur service instance and add the Conjur Buildpack to your `cf push` command:
 
@@ -95,6 +100,27 @@ applications:
 ```
 
 When your application starts, the Conjur Buildpack will inject the secrets specified in the `secrets.yml` file into the application process as environment variables.
+
+#### <a name="online"></a> Invoking the Online Buildpack at Deploy Time
+
+To use the CyberArk Conjur Buildpack as an online buildpack, use the GitHub repository address
+instead of specifying the installed buildpack name. This may be done with the `cf push` command,
+or using the manifest file.
+
+```sh
+cf push my-app -b https://github.com/cyberark/cloudfoundry-conjur-buildpack ... -b final_buildpack
+```
+
+```yaml
+---
+applications:
+- name: my-app
+  services:
+  - conjur
+  buildpacks:
+  - https://github.com/cyberark/cloudfoundry-conjur-buildpack
+  - ruby_buildpack
+```
 
 ## Development
 
