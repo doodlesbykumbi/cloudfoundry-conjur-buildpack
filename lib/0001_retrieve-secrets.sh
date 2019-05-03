@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Check whether the conjur-env output has already been sourced
+# into the environment. If so, return early.
+if [ ! -z "$CONJUR_ENV_SOURCED" ]; then
+  return
+fi
+
 echo "[cyberark-conjur-buildpack]: retrieving & injecting secrets"
 
 err_report() {
@@ -40,3 +46,5 @@ popd
 
 [ ! -z "$xtrace" ] && set -x
 trap - ERR
+
+export CONJUR_ENV_SOURCED=true
