@@ -36,7 +36,7 @@ else
   echo " - found it"
 fi
 
-echo "[cyberark-conjur-buildpack]: download go"
+echo "[cyberark-conjur-buildpack]: install go to build conjur-env binary"
 source "$BUILDPACK_DIR/lib/install_go.sh"
 
 
