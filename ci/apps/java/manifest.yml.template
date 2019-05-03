@@ -1,0 +1,9 @@
+applications:
+- name: java-app
+  random-route: true
+  env:
+    CONJUR_BUILDPACK_BYPASS_SERVICE_CHECK: true
+  memory: 1G
+  buildpacks:
+    - {conjur_buildpack}
+    - https://github.com/cloudfoundry/java-buildpack.git

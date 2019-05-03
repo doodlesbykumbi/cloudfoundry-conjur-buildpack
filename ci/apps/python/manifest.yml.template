@@ -1,0 +1,8 @@
+---
+applications:
+- name: python-app
+  env:
+    CONJUR_BUILDPACK_BYPASS_SERVICE_CHECK: true
+  buildpacks:
+  - {conjur_buildpack}
+  - python_buildpack
