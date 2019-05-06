@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Buildpack now searches for `secrets.yml` in `BOOT-INF/classes/` to better
+  support Java applications by default.
+- Added support to use the Conjur buildpack as an online buildpack by referencing
+  the github repository directly. See the [README](README.md#online) for more
+  information.
+
+### Changed
+- Buildpack now copies the secrets retrieval profile script into the application
+  directory. This works around a missing feature in the Java buildpack, where it
+  does not correctly source from the buildpacks profile directories.
+
 ## [2.0.1] - 2019-03-19
 
 ### Fixed

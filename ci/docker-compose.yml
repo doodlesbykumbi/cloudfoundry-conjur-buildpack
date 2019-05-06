@@ -5,6 +5,7 @@ services:
     image: buildpack-tester
     environment:
       BUILDPACK_BUILD_DIR: $BUILDPACK_ROOT_DIR/buildpack-build # tests run against the code in this directory
+      CF_STACK: cflinuxfs2
     volumes:
       - ..:/$BUILDPACK_ROOT_DIR
 

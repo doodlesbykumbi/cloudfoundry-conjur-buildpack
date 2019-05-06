@@ -16,26 +16,109 @@ BUILDPACK_DIR=$(dirname $BIN_DIR)
 
 echo "[cyberark-conjur-buildpack]: supplying"
 
-if [ ! -f $BUILD_DIR/secrets.yml ]; then
-  echo "No secrets.yml file found in $BUILD_DIR."
+
+echo "[cyberark-conjur-buildpack]: looking for secrets.yml"
+if [ -f $BUILD_DIR/secrets.yml ]; then
+  echo " - secrets.yml file found in $BUILD_DIR"
+elif  [ -f $BUILD_DIR/BOOT-INF/classes/secrets.yml ]; then
+
+  # Spring Boot 1.4 seemed to have changed where files get placed into the Executable Jar:
+  # https://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html
+  
+  # Here is a long disussion about that change. The thread jumps into impact to CloudFoundry halfway down. 
+  # https://github.com/spring-projects/spring-boot/issues/6626
+  # The owner of the Java Buildpack is Ben Hale, and he weighs in about half way down. 
+  # Simple answer is that you can't get files into the root of the jar without manipulating the jar
+  # using maven or gradle after it is created.
+
+  # Future possible option rather than manipulate the files, is to locate the secrets.yml and then pass
+  # the path to the conjur-env process (or even have the conjur-evn find it directly) 
+
+  echo " - secrets.yml file found in $BUILD_DIR/BOOT-INF/classes/secrets.yml copy to $BUILD_DIR/secrets.yml"
+  cp $BUILD_DIR/BOOT-INF/classes/secrets.yml $BUILD_DIR/secrets.yml
+else
+  echo " - Unable to find a secrets.yml... exit"
   exit 1
 fi
 
+echo "[cyberark-conjur-buildpack]: looking for cyberark-conjur in VCAP_SERVICES"
 if [[ false = $(echo $VCAP_SERVICES | jq 'has("cyberark-conjur")') ]]; then
-  echo "No credentials for cyberark-conjur service found in VCAP_SERVICES."
+  echo " - No credentials for cyberark-conjur service found in VCAP_SERVICES... exit"
   exit 1
+else
+  echo " - found it"
 fi
+
+# Build the conjur-env binary if it's not in the buildpack package
+CONJUR_ENV_PATH=${BUILDPACK_DIR}/vendor/conjur-env
+echo "[cyberark-conjur-buildpack]: looking for conjur-env binary at ${CONJUR_ENV_PATH}"
+if [ -f ${CONJUR_ENV_PATH} ]; then
+  echo " - found it"
+else
+  echo " - need to compile conjur-env"
+  echo "[cyberark-conjur-buildpack]: install go to build conjur-env binary"
+  source "$BUILDPACK_DIR/lib/install_go.sh"
+
+  pushd  ${DEPS_DIR}/${INDEX_DIR}
+    cd ${BUILDPACK_DIR}/conjur-env
+
+    echo "[cyberark-conjur-buildpack]: download the conjur-env binary dependencies"
+    $GoInstallDir/go/bin/go mod download
+
+    echo "[cyberark-conjur-buildpack]: building the conjur-env binary."
+    GOOS=linux \
+    GOARCH=amd64 \
+    CGO_ENABLED=0 \
+    $GoInstallDir/go/bin/go build -o ${CONJUR_ENV_PATH} -a -ldflags '-extldflags "-static"' .
+    file ${CONJUR_ENV_PATH}
+  popd
+fi
+
+# Copy conjur-env into application dependencies
+echo "[cyberark-conjur-buildpack]: copy the conjur-env binary from the buildpack dir to the dependencies/index directory"
+mkdir -p ${DEPS_DIR}/${INDEX_DIR}/vendor/
+cp -v ${CONJUR_ENV_PATH} ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
+
 
 pushd ${DEPS_DIR}/${INDEX_DIR}
   # We add the lib/0001_retrieve-secrets.sh script to profile.d so that it will
   # be run automatically to retrieve secrets when the app starts.
-  mkdir -p profile.d
+
+  echo "[cyberark-conjur-buildpack]: setup the dependencies/index/profile.d script so the conjur app starts automatically"
+  mkdir -p ./profile.d
   cp ${BUILDPACK_DIR}/lib/0001_retrieve-secrets.sh ./profile.d/0001_retrieve-secrets.sh
   sed "s/__BUILDPACK_INDEX__/$INDEX_DIR/g" ./profile.d/0001_retrieve-secrets.sh -i
 
-  # conjur-env reads a secrets.yml file and uses it to retrieve secrets from
-  # Conjur. We copy it to the dependency directory to make it accessible to the
-  # /profile.d script. The /vendor subdirectory is just for convenience.
-  mkdir -p vendor
-  cp ${BUILDPACK_DIR}/vendor/conjur-env ./vendor/conjur-env
+  # Its Complicated :D 
+  # Buildpacks are in a huge state of flux. As of Spring 2019, buildpacks use the 
+  # V2 apis, but the V3 is a fundamental change for the better, but it is a big change.
+  # Couple that with the fact that the Java Buildpack is *HUGE*.  So what is happening is
+  # the Java Buildpack is being deconstructed into multiple smaller java build pack 
+  # that are more focused on individual problems. 
+
+  # why does this matter? Because it is the final buildpacks whose job is to 
+  # look through all the ./profile.d/ directories of all the dependencies and execute scripts. 
+  # and the Java Buildpack v2 has not plans to implement this functionality.
+
+  # https://github.com/cloudfoundry/java-buildpack/issues/563#issuecomment-452437417
+
+  # :(
+
+  # so V2 supply buildpacks must *push* their scripts over into the /home/vcap/app/.profile.d/ 
+  # directory. This is breaking of the build pack contract to manipulate anything inside /home/vcap/app
+  # but at this point, you don't have much of a choice, all all this gets fixed in the V3 versions. 
+
+  # /shrug.  
+
+  # CONCERN: this following code, may only need to be executed *IF* the final build pack is java*
+  # This will need to be heavily tested with multiple final buildpacks. 
+  # or if the conjur-env runs twice is that a big deal? It will just 
+  # set the env twice.  not good, but not terrible.
+
+  echo "[cyberark-conjur-buildpack]:  - because of missing feature in Java Buildpack, also copy to /home/vcap/app/.profile.d/"
+  mkdir -p $BUILD_DIR/.profile.d/
+  cp -v ./profile.d/0001_retrieve-secrets.sh $BUILD_DIR/.profile.d/
+
 popd
+
+
