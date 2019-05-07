@@ -6,6 +6,8 @@ services:
     environment:
       BUILDPACK_BUILD_DIR: $BUILDPACK_ROOT_DIR/buildpack-build # tests run against the code in this directory
       CF_STACK: cflinuxfs2
+      CF_API_ENDPOINT: 
+      CF_ADMIN_PASSWORD:
     volumes:
       - ..:/$BUILDPACK_ROOT_DIR
 

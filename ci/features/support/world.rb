@@ -1,4 +1,5 @@
 module BuildpackWorld
+  include CfHelper
 
   def load_root_policy policy
     load_policy 'root', policy
@@ -23,6 +24,22 @@ module BuildpackWorld
 
   def admin_password
     'admin'
+  end
+
+  def ci_user
+    @ci_user ||= create_ci_user
+  end
+
+  def cf_ci_org
+    @cf_ci_org ||= create_org
+  end
+
+  def cf_ci_space
+    @cf_ci_space ||= create_space(cf_ci_org)
+  end
+
+  def cf_ci_buildpack_name
+    @cf_ci_buildpack_name ||= "conjur_buildpack_ci_#{SecureRandom.hex}"
   end
 
   def login_as_role login, api_key = nil
