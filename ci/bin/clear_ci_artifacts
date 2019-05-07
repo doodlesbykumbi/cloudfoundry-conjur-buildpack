@@ -1,0 +1,14 @@
+#!/bin/bash -eu
+
+# This script is reponsible for cleaning up CI artifacts left in the
+# CloudFoundry environment for debugging.
+
+# Clear organizations
+cf orgs \
+  | grep ci-org \
+  | xargs -L1 cf delete-org -f
+
+# Clear buildpacks
+cf buildpacks \
+  | awk '/conjur_buildpack_ci_/ { print $1 }' \
+  | xargs -L1 cf delete-buildpack -f
