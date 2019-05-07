@@ -16,7 +16,6 @@ BUILDPACK_DIR=$(dirname $BIN_DIR)
 
 echo "[cyberark-conjur-buildpack]: supplying"
 
-
 echo "[cyberark-conjur-buildpack]: looking for secrets.yml"
 if [ -f $BUILD_DIR/secrets.yml ]; then
   echo " - secrets.yml file found in $BUILD_DIR"
@@ -83,7 +82,6 @@ echo "[cyberark-conjur-buildpack]: copy the conjur-env binary from the buildpack
 mkdir -p ${DEPS_DIR}/${INDEX_DIR}/vendor/
 cp -v ${CONJUR_ENV_PATH} ${DEPS_DIR}/${INDEX_DIR}/vendor/conjur-env
 
-
 pushd ${DEPS_DIR}/${INDEX_DIR}
   # We add the lib/0001_retrieve-secrets.sh script to profile.d so that it will
   # be run automatically to retrieve secrets when the app starts.
@@ -106,23 +104,12 @@ pushd ${DEPS_DIR}/${INDEX_DIR}
 
   # https://github.com/cloudfoundry/java-buildpack/issues/563#issuecomment-452437417
 
-  # :(
-
   # so V2 supply buildpacks must *push* their scripts over into the /home/vcap/app/.profile.d/ 
   # directory. This is breaking of the build pack contract to manipulate anything inside /home/vcap/app
   # but at this point, you don't have much of a choice, all all this gets fixed in the V3 versions. 
-
-  # /shrug.  
-
-  # CONCERN: this following code, may only need to be executed *IF* the final build pack is java*
-  # This will need to be heavily tested with multiple final buildpacks. 
-  # or if the conjur-env runs twice is that a big deal? It will just 
-  # set the env twice.  not good, but not terrible.
 
   echo "[cyberark-conjur-buildpack]:  - because of missing feature in Java Buildpack, also copy to /home/vcap/app/.profile.d/"
   mkdir -p $BUILD_DIR/.profile.d/
   cp -v ./profile.d/0001_retrieve-secrets.sh $BUILD_DIR/.profile.d/
 
 popd
-
-
