@@ -41,12 +41,16 @@ else
   exit 1
 fi
 
-echo "[cyberark-conjur-buildpack]: looking for cyberark-conjur in VCAP_SERVICES"
-if [[ false = $(echo $VCAP_SERVICES | jq 'has("cyberark-conjur")') ]]; then
-  echo " - No credentials for cyberark-conjur service found in VCAP_SERVICES... exit"
-  exit 1
-else
-  echo " - found it"
+# When used in CI pipelines, we want to be able to test the buildpack
+# without a Conjur Service Broker running
+if [[ "$CONJUR_BUILDPACK_BYPASS_SERVICE_CHECK" != "true" ]]; then
+  echo "[cyberark-conjur-buildpack]: looking for cyberark-conjur in VCAP_SERVICES"
+  if [[ false = $(echo $VCAP_SERVICES | jq 'has("cyberark-conjur")') ]]; then
+    echo " - No credentials for cyberark-conjur service found in VCAP_SERVICES... exit"
+    exit 1
+  else
+    echo " - found it"
+  fi
 fi
 
 # Build the conjur-env binary if it's not in the buildpack package
