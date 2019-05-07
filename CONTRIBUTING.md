@@ -61,6 +61,23 @@ $ ./package.sh   # Create the conjur-env binary in the vendor dir and a ZIP of t
 $ ./test.sh      # Run the test suite
 ```
 
+#### Integration Testing
+
+To run the buildpack integration tests, the test script needs to be given the API endpoint and admin credentials
+for a CloudFoundry installation. These are provided as environment variables to the script:
+
+```sh-session
+$ export CF_API_ENDPOINT=https://api.sys.cloudfoundry.net
+$ CF_ADMIN_PASSWORD=... ./test.sh
+```
+
+These variables may also be provided using [Summon](https://cyberark.github.io/summon/) by updating the `secrets.yml`
+file as needed and running:
+
+```
+$ summon ./test.sh
+```
+
 ### Releasing
 
 1. Based on the unreleased content, determine the new version number and update the [VERSION](VERSION) file. This project uses [semantic versioning](https://semver.org/).
