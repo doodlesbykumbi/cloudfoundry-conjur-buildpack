@@ -25,7 +25,7 @@ Before getting started, you should install some developer tools. These are not r
 
 In addition, if you will be making changes to the `conjur-env` binary, you should
 ensure you have [Go installed](https://golang.org/doc/install#install) locally.
-Our project uses Go modules, so you will want to install version 1.11+.
+Our project uses Go modules, so you will want to install version 1.12+.
 
 ### Pull Request Workflow
 
@@ -39,7 +39,7 @@ Make sure your Pull Request includes an update to the [CHANGELOG](https://github
 
 ### Updating the `conjur-env` Binary
 
-The `conjur-env` binary uses Go modules to manage dependencies. To update the versions of `summon` / `conjur-api-go` that are included in the `conjur-env` binary in the buildpack, make sure you have Go installed locally (at least version 1.11) and run:
+The `conjur-env` binary uses Go modules to manage dependencies. To update the versions of `summon` / `conjur-api-go` that are included in the `conjur-env` binary in the buildpack, make sure you have Go installed locally (at least version 1.12) and run:
 
 ```
 $ cd conjur-env/

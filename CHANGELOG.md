@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Buildpack now copies the secrets retrieval profile script into the application
   directory. This works around a missing feature in the Java buildpack, where it
   does not correctly source from the buildpacks profile directories.
+- Go version of conjur-env binary bumped to 1.12
+- Go binary updated to use native os homedir method instead of mitchellh lib
 
 ## [2.0.1] - 2019-03-19
 
