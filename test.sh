@@ -7,6 +7,10 @@ function finish {
 }
 trap finish EXIT
 
+# set up the containers to run in their own namespace
+COMPOSE_PROJECT_NAME="$(basename "$PWD")_$(openssl rand -hex 3)"
+export COMPOSE_PROJECT_NAME
+
 # sets up conjur and retrieves credentials
 . ./setup-conjur.sh
 
