@@ -8,6 +8,7 @@ services:
       CF_STACK: cflinuxfs2
       CF_API_ENDPOINT: 
       CF_ADMIN_PASSWORD:
+      BRANCH_NAME:
     volumes:
       - ..:/$BUILDPACK_ROOT_DIR
 

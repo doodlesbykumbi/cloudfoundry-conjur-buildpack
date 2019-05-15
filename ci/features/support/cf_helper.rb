@@ -1,6 +1,6 @@
 module CfHelper
   def cf_online_buildpack_route
-    branch_name = `git rev-parse --abbrev-ref HEAD`
+    branch_name = ENV['BRANCH_NAME']
     hash = "##{branch_name}" unless branch_name == 'master'
     "https://github.com/cyberark/cloudfoundry-conjur-buildpack#{hash}"
   end
@@ -53,7 +53,7 @@ module CfHelper
   end
 
   def create_app_manifest(name=cf_ci_buildpack_name)
-    ShellSession.execute(%(sed -e 's/{conjur_buildpack}/#{name}/g' manifest.yml.template > manifest.yml))
+    ShellSession.execute(%(sed -e 's|{conjur_buildpack}|#{name}|g' manifest.yml.template > manifest.yml))
   end
 
   def create_org

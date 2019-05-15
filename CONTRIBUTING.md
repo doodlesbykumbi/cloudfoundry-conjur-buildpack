@@ -50,6 +50,13 @@ This will automatically update go.mod and go.sum.
 
 Commit your changes, and the next time `./package.sh` is run the `vendor/conjur-env` directory will be created with updated dependencies.
 
+When upgrading the version of Go for `conjur-env`, both the pre-built offline version and online version need to be
+updated:
+
+- **Offline build:** Update the base image version in `./conjur-env/Dockerfile`
+
+- **Online build:** Update the version and file hashes in `./lib/install_go.sh`. Available versions and hashes are available at https://buildpacks.cloudfoundry.org/#/buildpacks/.
+
 ### Testing
 
 To test the usage of the Conjur Service Broker within a CF deployment, you can
