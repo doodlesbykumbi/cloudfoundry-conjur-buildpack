@@ -11,6 +11,8 @@ trap finish EXIT
 COMPOSE_PROJECT_NAME="$(basename "$PWD")_$(openssl rand -hex 3)"
 export COMPOSE_PROJECT_NAME
 
+export BRANCH_NAME=${BRANCH_NAME:-$(git symbolic-ref --short HEAD)}
+
 # sets up conjur and retrieves credentials
 . ./setup-conjur.sh
 
