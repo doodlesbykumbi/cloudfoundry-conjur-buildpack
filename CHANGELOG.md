@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.1.2] - 2019-10-28
+
 ### Added
 - Buildpack supply step now scans build directory for candidate secrets.yml files
   and reports them to the output.
@@ -64,7 +67,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 The first tagged version.
 
-[Unreleased]: https://github.com/cyberark/cloudfoundry-conjur-buildpack/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/cyberark/cloudfoundry-conjur-buildpack/compare/v2.1.2...HEAD
+[2.1.2]: https://github.com/cyberark/cloudfoundry-conjur-buildpack/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/cyberark/cloudfoundry-conjur-buildpack/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/cyberark/cloudfoundry-conjur-buildpack/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/cyberark/cloudfoundry-conjur-buildpack/compare/v2.0.0...v2.0.1
