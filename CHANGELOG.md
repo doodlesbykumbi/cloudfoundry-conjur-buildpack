@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Buildpack supply step now scans build directory for candidate secrets.yml files
+  and reports them to the output.
+- The runtime location for `secrets.yml` can now be configured by setting the
+  `SECRETS_YAML_PATH` environment variable for the Cloud Foundry application. See
+  the [README](README.md) for more information.
 
 ## [2.1.1] - 2019-05-15
 
