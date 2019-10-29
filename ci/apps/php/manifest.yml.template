@@ -1,0 +1,9 @@
+---
+applications:
+- name: php-app
+  env:
+    CONJUR_BUILDPACK_BYPASS_SERVICE_CHECK: true
+    SECRETS_YAML_PATH: lib/secrets.yml
+  buildpacks:
+  - {conjur_buildpack}
+  - php_buildpack

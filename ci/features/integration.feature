@@ -22,6 +22,10 @@ Feature: Integrations Tests for PCF 2.4
       When I push a Ruby app with the offline buildpack
       Then the secrets.yml values are available in the app
 
+    Scenario: PHP offline buildpack integration
+      When I push a PHP app with the offline buildpack
+      Then the secrets.yml values are available in the app
+
     Scenario: Java offline buildpack integration
       When I push a Java app with the offline buildpack
       Then the secrets.yml values are available in the app
