@@ -85,11 +85,14 @@ export VCAP_SERVICES='
 EOS
 end
 
-And(/^the build directory has a secrets\.yml file$/) do
+And(/^the build directory has a secrets\.yml file(?: at ["']([^'"]+)["'])?/) do |secrets_yaml_path|
   secretsyml = <<EOS
 LITERAL_SECRET: a literal secret
 EOS
-  File.open("#{@BUILD_DIR}/secrets.yml", 'w') { |file| file.write(secretsyml) }
+  secrets_yaml_path ||= 'secrets.yml'
+  full_path = "#{@BUILD_DIR}/#{secrets_yaml_path}"
+  FileUtils.mkdir_p(File.dirname(full_path))
+  File.open(full_path, 'w') { |file| file.write(secretsyml) }
 end
 
 When(/^the build directory has this secrets\.yml file$/) do |secretsyml|

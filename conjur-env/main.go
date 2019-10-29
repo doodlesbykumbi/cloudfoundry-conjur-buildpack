@@ -92,9 +92,14 @@ func main() {
 		secrets secretsyml.SecretsMap
 	)
 
-	secrets, err = secretsyml.ParseFromFile("secrets.yml", "", nil)
+	secretsYamlPath, exists := os.LookupEnv("SECRETS_YAML_PATH")
+	if !exists {
+		secretsYamlPath = "secrets.yml"
+	}
+
+	secrets, err = secretsyml.ParseFromFile(secretsYamlPath, "", nil)
 	if os.IsNotExist(err) {
-		printAndExitIfError(fmt.Errorf("secrets.yml not found\n"))
+		printAndExitIfError(fmt.Errorf("%s not found\n", secretsYamlPath))
 	}
 	printAndExitIfError(err)
 

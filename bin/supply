@@ -17,27 +17,29 @@ BUILDPACK_DIR=$(dirname $BIN_DIR)
 echo "[cyberark-conjur-buildpack]: supplying"
 
 echo "[cyberark-conjur-buildpack]: looking for secrets.yml"
-if [ -f $BUILD_DIR/secrets.yml ]; then
-  echo " - secrets.yml file found in $BUILD_DIR"
-elif  [ -f $BUILD_DIR/BOOT-INF/classes/secrets.yml ]; then
-
-  # Spring Boot 1.4 seemed to have changed where files get placed into the Executable Jar:
+if  [ -f $BUILD_DIR/BOOT-INF/classes/secrets.yml ]; then
+  # Spring Boot 1.4 changed where files get placed into the Executable Jar:
   # https://docs.spring.io/spring-boot/docs/current/reference/html/executable-jar.html
   
   # Here is a long disussion about that change. The thread jumps into impact to CloudFoundry halfway down. 
   # https://github.com/spring-projects/spring-boot/issues/6626
-  # The owner of the Java Buildpack is Ben Hale, and he weighs in about half way down. 
   # Simple answer is that you can't get files into the root of the jar without manipulating the jar
   # using maven or gradle after it is created.
 
   # Future possible option rather than manipulate the files, is to locate the secrets.yml and then pass
-  # the path to the conjur-env process (or even have the conjur-evn find it directly) 
-
+  # the path to the conjur-env process (or even have the conjur-env find it directly) 
   echo " - secrets.yml file found in $BUILD_DIR/BOOT-INF/classes/secrets.yml copy to $BUILD_DIR/secrets.yml"
   cp $BUILD_DIR/BOOT-INF/classes/secrets.yml $BUILD_DIR/secrets.yml
-else
-  echo " - Unable to find a secrets.yml... exit"
+fi
+
+# Search for candidate `secrets.yml` paths and report them to the deploy output
+secrets_yaml="$(find $BUILD_DIR -name 'secrets.yml' -printf \"%P\\n\")"
+if [ -z "$secrets_yaml" ]; then
+  echo " - Unable to find a secrets.yml...exiting"
   exit 1
+else
+  echo " - secrets.yml file found at:"
+  echo $secrets_yaml
 fi
 
 # When used in CI pipelines, we want to be able to test the buildpack

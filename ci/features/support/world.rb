@@ -1,3 +1,5 @@
+require 'fileutils'
+
 module BuildpackWorld
   include CfHelper
 

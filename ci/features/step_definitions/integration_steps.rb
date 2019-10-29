@@ -36,6 +36,18 @@ When("I push a Ruby app with the offline buildpack") do
   @app_name = 'ruby-app'
 end
 
+When("I push a PHP app with the offline buildpack") do
+  login_to_pcf
+  cf_target(cf_ci_org, cf_ci_space)
+
+  Dir.chdir('apps/php') do
+    create_app_manifest
+    ShellSession.execute('cf push --random-route')
+  end
+
+  @app_name = 'php-app'
+end
+
 When(/^I push a Java app with the ([^ ]*) buildpack$/) do |buildpack_type|
   login_to_pcf
   cf_target(cf_ci_org, cf_ci_space)

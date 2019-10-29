@@ -16,6 +16,12 @@ Feature: Supply script
     Then the result should have a 1 exit status
 
   @BUILD_DIR
+  Scenario: When the app has a secrets.yml file not in the root
+    Given the build directory has a secrets.yml file at 'lib/secrets.yml'
+    When the supply script is run against the app's root folder
+    Then the result should have a 0 exit status
+
+  @BUILD_DIR
   Scenario: When VCAP_SERVICES does not have Conjur credentials
     Given the build directory has a secrets.yml file
     And VCAP_SERVICES does not have a cyberark-conjur key
