@@ -65,8 +65,8 @@ For each application that will be using the Conjur Buildpack you must create a `
 The following is an example of a `secrets.yml` file
 
 ```
-AWS_ACCESS_KEY_ID: !var aws/$environment/iam/user/robot/access_key_id
-AWS_SECRET_ACCESS_KEY: !var aws/$environment/iam/user/robot/secret_access_key
+AWS_ACCESS_KEY_ID: !var aws/prod/iam/user/robot/access_key_id
+AWS_SECRET_ACCESS_KEY: !var aws/prod/iam/user/robot/secret_access_key
 AWS_REGION: us-east-1
 SSL_CERT: !var:file ssl/certs/private
 ```
