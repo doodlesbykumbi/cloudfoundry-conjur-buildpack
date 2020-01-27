@@ -1,15 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"sync"
-	"strconv"
-	"github.com/cyberark/summon/secretsyml"
-	"github.com/cyberark/conjur-api-go/conjurapi"
-	"os"
-	"strings"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
+	"errors"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/summon/secretsyml"
 )
 
 type Provider interface {
@@ -18,8 +20,13 @@ type Provider interface {
 
 type CatProvider struct {
 }
+
 func (CatProvider) RetrieveSecret(path string) ([]byte, error) {
 	return ioutil.ReadFile(path)
+}
+
+type VcapServices struct {
+	ConjurInfo ConjurInfo
 }
 
 type ConjurInfo struct {
@@ -35,6 +42,10 @@ type ConjurCredentials struct {
 	Version        int    `json:"version"`
 }
 
+func (ci ConjurInfo) setEnv() {
+	ci.Credentials.setEnv()
+}
+
 func (c ConjurCredentials) setEnv() {
 	os.Setenv("CONJUR_APPLIANCE_URL", c.ApplianceURL)
 	os.Setenv("CONJUR_AUTHN_LOGIN", c.Login)
@@ -44,7 +55,8 @@ func (c ConjurCredentials) setEnv() {
 	os.Setenv("CONJUR_VERSION", strconv.Itoa(c.Version))
 }
 
-const SERVICE_LABEL="cyberark-conjur"
+const SERVICE_LABEL = "cyberark-conjur"
+
 func setConjurCredentialsEnv() error {
 	// Get the Conjur connection information from the VCAP_SERVICES
 	VCAP_SERVICES := os.Getenv("VCAP_SERVICES")
@@ -53,19 +65,14 @@ func setConjurCredentialsEnv() error {
 		return fmt.Errorf("VCAP_SERVICES environment variable is empty or doesn't exist\n")
 	}
 
-	services := make(map[string][]ConjurInfo)
+	services := VcapServices{}
 	err := json.Unmarshal([]byte(VCAP_SERVICES), &services)
 	if err != nil {
 		return fmt.Errorf("Error parsing Conjur connection information: %v\n", err.Error())
 	}
 
-	info := services[SERVICE_LABEL]
-	if len(info) == 0 {
-		return fmt.Errorf("No Conjur services are bound to this application.\n")
-	}
-
-	creds := info[0].Credentials
-	creds.setEnv()
+	conjurInfo := services.ConjurInfo
+	conjurInfo.setEnv()
 
 	return nil
 }
@@ -88,8 +95,8 @@ func NewProvider() (Provider, error) {
 func main() {
 	var (
 		provider Provider
-		err error
-		secrets secretsyml.SecretsMap
+		err      error
+		secrets  secretsyml.SecretsMap
 	)
 
 	secretsYamlPath, exists := os.LookupEnv("SECRETS_YAML_PATH")
@@ -108,7 +115,7 @@ func main() {
 	// no need to cleanup because we're injecting values to the environment
 
 	type Result struct {
-		key string
+		key   string
 		bytes []byte
 		error
 	}
@@ -130,7 +137,7 @@ func main() {
 		go func(key string, spec secretsyml.SecretSpec) {
 			var (
 				secretBytes []byte
-				err error
+				err         error
 			)
 
 			if spec.IsVar() {
@@ -173,4 +180,34 @@ func printAndExitIfError(err error) {
 	}
 	os.Stderr.Write([]byte(err.Error()))
 	os.Exit(1)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for VcapServices,
+// which allows us to only unmarshal the `cyberark-conjur` service object
+// using the ConjurInfo struct.
+func (vcapServices *VcapServices) UnmarshalJSON(b []byte) error {
+	services := make(map[string][]interface{})
+	err := json.Unmarshal(b, &services)
+	if err != nil {
+		return err
+	}
+
+	conjurServices, ok := services[SERVICE_LABEL]
+	if !ok || len(conjurServices) == 0 {
+		return errors.New("no Conjur services are bound to this application")
+	}
+
+	infoBytes, err := json.Marshal(conjurServices[0])
+	if err != nil {
+		return err
+	}
+
+	info := ConjurInfo{}
+	err = json.Unmarshal(infoBytes, &info)
+	if err != nil {
+		return err
+	}
+
+	vcapServices.ConjurInfo = info
+	return nil
 }
