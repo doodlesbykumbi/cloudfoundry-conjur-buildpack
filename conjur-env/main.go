@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"sync"
-	"strconv"
-	"github.com/cyberark/summon/secretsyml"
-	"github.com/cyberark/conjur-api-go/conjurapi"
-	"os"
-	"strings"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/summon/secretsyml"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 type Provider interface {
@@ -18,6 +18,7 @@ type Provider interface {
 
 type CatProvider struct {
 }
+
 func (CatProvider) RetrieveSecret(path string) ([]byte, error) {
 	return ioutil.ReadFile(path)
 }
@@ -44,7 +45,8 @@ func (c ConjurCredentials) setEnv() {
 	os.Setenv("CONJUR_VERSION", strconv.Itoa(c.Version))
 }
 
-const SERVICE_LABEL="cyberark-conjur"
+const SERVICE_LABEL = "cyberark-conjur"
+
 func setConjurCredentialsEnv() error {
 	// Get the Conjur connection information from the VCAP_SERVICES
 	VCAP_SERVICES := os.Getenv("VCAP_SERVICES")
@@ -88,8 +90,8 @@ func NewProvider() (Provider, error) {
 func main() {
 	var (
 		provider Provider
-		err error
-		secrets secretsyml.SecretsMap
+		err      error
+		secrets  secretsyml.SecretsMap
 	)
 
 	secretsYamlPath, exists := os.LookupEnv("SECRETS_YAML_PATH")
@@ -108,7 +110,7 @@ func main() {
 	// no need to cleanup because we're injecting values to the environment
 
 	type Result struct {
-		key string
+		key   string
 		bytes []byte
 		error
 	}
@@ -130,7 +132,7 @@ func main() {
 		go func(key string, spec secretsyml.SecretSpec) {
 			var (
 				secretBytes []byte
-				err error
+				err         error
 			)
 
 			if spec.IsVar() {
