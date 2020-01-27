@@ -58,6 +58,11 @@ export VCAP_SERVICES='
    "ssl_certificate": "",
    "version": 5
   }
+ }],
+ "some-other-service": [{
+   "credentials": {
+     "version": "1.0"
+   }
  }]
 }
 '

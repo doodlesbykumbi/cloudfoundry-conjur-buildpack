@@ -3,13 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cyberark/conjur-api-go/conjurapi"
-	"github.com/cyberark/summon/secretsyml"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"errors"
+
+	"github.com/cyberark/conjur-api-go/conjurapi"
+	"github.com/cyberark/summon/secretsyml"
 )
 
 type Provider interface {
@@ -23,6 +25,10 @@ func (CatProvider) RetrieveSecret(path string) ([]byte, error) {
 	return ioutil.ReadFile(path)
 }
 
+type VcapServices struct {
+	ConjurInfo ConjurInfo
+}
+
 type ConjurInfo struct {
 	Credentials ConjurCredentials `json:"credentials"`
 }
@@ -34,6 +40,10 @@ type ConjurCredentials struct {
 	Account        string `json:"account"`
 	SSLCertificate string `json:"ssl_certificate"`
 	Version        int    `json:"version"`
+}
+
+func (ci ConjurInfo) setEnv() {
+	ci.Credentials.setEnv()
 }
 
 func (c ConjurCredentials) setEnv() {
@@ -55,19 +65,14 @@ func setConjurCredentialsEnv() error {
 		return fmt.Errorf("VCAP_SERVICES environment variable is empty or doesn't exist\n")
 	}
 
-	services := make(map[string][]ConjurInfo)
+	services := VcapServices{}
 	err := json.Unmarshal([]byte(VCAP_SERVICES), &services)
 	if err != nil {
 		return fmt.Errorf("Error parsing Conjur connection information: %v\n", err.Error())
 	}
 
-	info := services[SERVICE_LABEL]
-	if len(info) == 0 {
-		return fmt.Errorf("No Conjur services are bound to this application.\n")
-	}
-
-	creds := info[0].Credentials
-	creds.setEnv()
+	conjurInfo := services.ConjurInfo
+	conjurInfo.setEnv()
 
 	return nil
 }
@@ -175,4 +180,34 @@ func printAndExitIfError(err error) {
 	}
 	os.Stderr.Write([]byte(err.Error()))
 	os.Exit(1)
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for VcapServices,
+// which allows us to only unmarshal the `cyberark-conjur` service object
+// using the ConjurInfo struct.
+func (vcapServices *VcapServices) UnmarshalJSON(b []byte) error {
+	services := make(map[string][]interface{})
+	err := json.Unmarshal(b, &services)
+	if err != nil {
+		return err
+	}
+
+	conjurServices, ok := services[SERVICE_LABEL]
+	if !ok || len(conjurServices) == 0 {
+		return errors.New("no Conjur services are bound to this application")
+	}
+
+	infoBytes, err := json.Marshal(conjurServices[0])
+	if err != nil {
+		return err
+	}
+
+	info := ConjurInfo{}
+	err = json.Unmarshal(infoBytes, &info)
+	if err != nil {
+		return err
+	}
+
+	vcapServices.ConjurInfo = info
+	return nil
 }
