@@ -19,7 +19,7 @@ services:
     image: cyberark/conjur
     command: server -a cucumber -f /empty.yml
     environment:
-      CONJUR_ADMIN_PASSWORD: admin
+      CONJUR_ADMIN_PASSWORD: ADmin123!!!!
       DATABASE_URL: postgres://postgres@postgres/postgres
       CONJUR_DATA_KEY: 'WMfApcDBtocRWV+ZSUP3Tjr5XNU+Z2FdBb6BEezejIs='
     depends_on:

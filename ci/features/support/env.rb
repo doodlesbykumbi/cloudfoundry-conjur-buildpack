@@ -31,7 +31,7 @@ end
 
 def reset_root_policy
   login = 'admin'
-  password = 'admin'
+  password = 'ADmin123!!!!'
   Conjur::API.new_from_key(
       login,
       Conjur::API.login(login, password)

@@ -25,7 +25,7 @@ module BuildpackWorld
   end
 
   def admin_password
-    'admin'
+    'ADmin123!!!!'
   end
 
   def ci_user
