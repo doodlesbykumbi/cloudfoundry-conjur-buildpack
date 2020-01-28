@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Added a NOTICES.txt file for open source acknowledgements that is included
+  in the release ZIP file
+
 ### Changed
 - The buildpack now properly reads Conjur credentials from `VCAP_SERVICES` when
   `VCAP_SERVICES` contains credentials for other services with the same field
