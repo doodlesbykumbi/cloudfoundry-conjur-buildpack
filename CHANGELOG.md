@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - The buildpack now properly reads Conjur credentials from `VCAP_SERVICES` when
   `VCAP_SERVICES` contains credentials for other services with the same field
   names (e.g. `version`).
+- Go version for the `conjur-env` binary bumped to 1.13.6
+- Go dependencies updated for the `conjur-env` binary
 
 ## [2.1.2] - 2019-10-28
 
