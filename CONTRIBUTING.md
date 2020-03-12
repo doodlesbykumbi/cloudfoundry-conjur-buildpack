@@ -3,6 +3,8 @@
 Thanks for your interest in contributing to the Conjur Buildpack! Here
 are some guidelines on how to get started.
 
+For general contribution and community guidelines, please see the [community repo](https://github.com/cyberark/community).
+
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
