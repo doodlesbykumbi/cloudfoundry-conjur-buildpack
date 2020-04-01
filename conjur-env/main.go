@@ -1,17 +1,22 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
-	"errors"
+	"time"
 
 	"github.com/cyberark/conjur-api-go/conjurapi"
 	"github.com/cyberark/summon/secretsyml"
+	"github.com/hashicorp/go-retryablehttp"
+	"golang.org/x/time/rate"
 )
 
 type Provider interface {
@@ -77,6 +82,30 @@ func setConjurCredentialsEnv() error {
 	return nil
 }
 
+// RoundTripper allows us to convert a function into a http.RoundTripper
+type RoundTripper func(*http.Request) (*http.Response, error)
+func (r RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	return r(req)
+}
+
+// WrappedRetriableHTTPClient wraps a retryablehttp.Client so that it can be consumed as
+// an http.Client.
+func WrappedRetriableHTTPClient(retriableClient *retryablehttp.Client) *http.Client {
+	return &http.Client{
+		Transport: RoundTripper(
+			func(req *http.Request) (*http.Response, error) {
+				retriableRequest, err := retryablehttp.FromRequest(req)
+
+				if err != nil {
+					return nil, err
+				}
+
+				return retriableClient.Do(retriableRequest)
+			},
+		),
+	}
+}
+
 func NewProvider() (Provider, error) {
 	//return CatProvider{}, nil
 	err := setConjurCredentialsEnv()
@@ -89,8 +118,91 @@ func NewProvider() (Provider, error) {
 		return nil, err
 	}
 
-	return conjurapi.NewClientFromEnvironment(config)
+	client, err := conjurapi.NewClientFromEnvironment(config)
+	if err != nil {
+		return nil, err
+	}
+
+	retriableClient := &retryablehttp.Client{
+		HTTPClient: client.GetHttpClient(),
+		RetryWaitMax: 3 * time.Second,
+		Backoff:      retryablehttp.LinearJitterBackoff,
+		CheckRetry:   retryablehttp.DefaultRetryPolicy,
+		RetryMax:     3,
+	}
+
+	client.SetHttpClient(WrappedRetriableHTTPClient(retriableClient))
+
+	return client, nil
 }
+
+// workCoordinator is a structure that bundles the following capabilities:
+// 1. limiting concurrency
+// 2. request rate limiting
+// 3. waiting for the completion of work
+type workCoordinator struct {
+	// wg ensures the completion of all started requests
+	wg sync.WaitGroup
+	// limiter maintains the request rate
+	limiter *rate.Limiter
+	// sem maintains the concurrency limit
+	sem chan bool
+
+	maxConcurrency int
+	maxWorkRate    int
+}
+
+func newWorkCoordinator(
+	maxConcurrency int,
+	maxRequestRate int,
+) *workCoordinator {
+	var limiter *rate.Limiter
+	var sem chan bool
+
+	if maxConcurrency > 0 {
+		limiter = rate.NewLimiter(rate.Every(time.Second/time.Duration(maxConcurrency)), 1)
+	}
+
+	if maxRequestRate > 0 {
+		sem = make(chan bool, maxConcurrency)
+	}
+
+	return &workCoordinator{
+		wg:             sync.WaitGroup{},
+		limiter:        limiter,
+		sem:            sem,
+	}
+}
+
+func (l *workCoordinator) Add() {
+	if l.limiter != nil {
+		err := l.limiter.Wait(context.Background())
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if l.sem != nil {
+		l.sem <- true
+	}
+
+	l.wg.Add(1)
+}
+
+func (l *workCoordinator) Done() {
+	if l.sem != nil {
+		<-l.sem
+	}
+
+	l.wg.Done()
+}
+
+func (l *workCoordinator) Wait() {
+	l.wg.Wait()
+}
+
+const defaultMaxConcurrency=10
+const defaultRequestRate=-1
 
 func main() {
 	var (
@@ -98,6 +210,32 @@ func main() {
 		err      error
 		secrets  secretsyml.SecretsMap
 	)
+
+	maxConcurrencyStr, exists := os.LookupEnv("SECRETS_MAX_CONCURRENCY")
+	var maxConcurrency = defaultMaxConcurrency
+	if exists {
+		maxConcurrency, err = strconv.Atoi(maxConcurrencyStr)
+		if err != nil {
+			finalErr := fmt.Errorf(
+				"unable to convert environment variable 'SECRETS_MAX_CONCURRENCY' to integer: %s\n",
+				err,
+			)
+			printAndExitIfError(finalErr)
+		}
+	}
+
+	maxRequestRateStr, exists := os.LookupEnv("SECRETS_MAX_REQUEST_RATE")
+	var maxRequestRate = defaultRequestRate
+	if exists {
+		maxRequestRate, err = strconv.Atoi(maxRequestRateStr)
+		if err != nil {
+			finalErr := fmt.Errorf(
+				"unable to convert environment variable 'SECRETS_MAX_REQUEST_RATE' to integer: %s\n",
+				err,
+			)
+			printAndExitIfError(finalErr)
+		}
+	}
 
 	secretsYamlPath, exists := os.LookupEnv("SECRETS_YAML_PATH")
 	if !exists {
@@ -120,10 +258,6 @@ func main() {
 		error
 	}
 
-	// Run provider calls concurrently
-	results := make(chan Result, len(secrets))
-	var wg sync.WaitGroup
-
 	// Lazy loading provider
 	for _, spec := range secrets {
 		if provider == nil && spec.IsVar() {
@@ -132,8 +266,14 @@ func main() {
 		}
 	}
 
+	// Channel for collecting results from concurrent request
+	results := make(chan Result, len(secrets))
+
+	workCoordinator := newWorkCoordinator(maxConcurrency, maxRequestRate)
 	for key, spec := range secrets {
-		wg.Add(1)
+		// Add work
+		workCoordinator.Add()
+
 		go func(key string, spec secretsyml.SecretSpec) {
 			var (
 				secretBytes []byte
@@ -153,11 +293,16 @@ func main() {
 			}
 
 			results <- Result{key, secretBytes, err}
-			wg.Done()
+
+			// Mark work as done
+			workCoordinator.Done()
 			return
 		}(key, spec)
 	}
-	wg.Wait()
+
+	// Wait for all the concurrent work to be done
+	workCoordinator.Wait()
+
 	close(results)
 
 	var exportStrings []string
